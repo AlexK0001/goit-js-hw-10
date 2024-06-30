@@ -1,75 +1,63 @@
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
+import iziToast from "izitoast";
+import "izitoast/dist/css/iziToast.min.css";
+
 document.addEventListener('DOMContentLoaded', function () {
-  // Initialize flatpickr
-  const datetimePicker = flatpickr('#datetime-picker', {
+  let countdownInterval;
+  const dateTimePicker = document.querySelector('#datetime-picker');
+  const startButton = document.querySelector('[data-start]');
+  const daysValue = document.querySelector('[data-days]'); 
+  const hoursValue = document.querySelector('[data-hours]'); 
+  const minutesValue = document.querySelector('[data-minutes]');
+  const secondsValue = document.querySelector('[data-seconds]');
+  let countdownInterval = null;
+  let userSelectedDate = null; 
+
+  const options = {
     enableTime: true,
     time_24hr: true,
     defaultDate: new Date(),
     minuteIncrement: 1,
-    onClose(selectedDates, dateStr, instance) {
+    onClose(selectedDates) {
       const selectedDate = selectedDates[0];
-      if (selectedDate < new Date()) {
+      if (selectedDate <= new Date()) {
         iziToast.error({
           title: 'Error',
           message: 'Please choose a date in the future',
         });
-        document.getElementById('startButton').disabled = true;
+        startButton.disabled = true;
       } else {
-        document.getElementById('startButton').disabled = false;
+        userSelectedDate = selectedDate;
+        startButton.disabled = false;
       }
     }
-  });
+  };
 
-  // Countdown timer logic
-  let countdownInterval;
-  document.getElementById('startButton').addEventListener('click', function () {
-    const selectedDate = datetimePicker.selectedDates[0];
-    if (!selectedDate || selectedDate <= new Date()) {
-      iziToast.error({
-        title: 'Error',
-        message: 'Please choose a valid future date',
-      });
-      return;
-    }
+  flatpickr(dateTimePicker, options);
 
-    // Disable input and button during countdown
-    datetimePicker.destroy();
-    document.getElementById('datetime-picker').disabled = true;
-    this.disabled = true;
+  function updateTimerDisplay({ days, hours, minutes, seconds }) {
+    daysValue.textContent = days;
+    hoursValue.textContent = addLeadingZero(hours);
+    minutesValue.textContent = addLeadingZero(minutes);
+    secondsValue.textContent = addLeadingZero(seconds);
+  }
 
-    // Start countdown
-    const endTime = selectedDate.getTime();
-    updateTimer(endTime);
+  function startTimer() {
+    countdownInterval = setInterval(() => {
+      const now = new Date();
+      const timeLeft = userSelectedDate - now;
 
-    countdownInterval = setInterval(function () {
-      updateTimer(endTime);
+      if (timeLeft <= 0) {
+        clearInterval(countdownInterval);
+        updateTimerDisplay({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        dateTimePicker.disabled = false;
+        return;
+      }
+
+      const timeComponents = convertMs(timeLeft);
+      updateTimerDisplay(timeComponents); 
     }, 1000);
-  });
-
-  function updateTimer(endTime) {
-    const currentTime = new Date().getTime();
-    const timeLeft = endTime - currentTime;
-
-    if (timeLeft < 0) {
-      clearInterval(countdownInterval);
-      document.getElementById('days').textContent = '00';
-      document.getElementById('hours').textContent = '00';
-      document.getElementById('minutes').textContent = '00';
-      document.getElementById('seconds').textContent = '00';
-      iziToast.success({
-        title: 'Countdown Finished',
-        message: 'The countdown has ended!',
-      });
-      // Enable input and button after countdown ends
-      document.getElementById('datetime-picker').disabled = false;
-      document.getElementById('startButton').disabled = false;
-      return;
-    }
-
-    const { days, hours, minutes, seconds } = convertMs(timeLeft);
-    document.getElementById('days').textContent = addLeadingZero(days);
-    document.getElementById('hours').textContent = addLeadingZero(hours);
-    document.getElementById('minutes').textContent = addLeadingZero(minutes);
-    document.getElementById('seconds').textContent = addLeadingZero(seconds);
   }
 
   function convertMs(ms) {
@@ -89,4 +77,19 @@ document.addEventListener('DOMContentLoaded', function () {
   function addLeadingZero(value) {
     return value < 10 ? `0${value}` : value;
   }
+
+  startButton.addEventListener('click', () => {
+    if (!userSelectedDate || userSelectedDate <= new Date()) {
+      iziToast.error({
+        title: 'Помилка',
+        message: 'Будь ласка, виберіть коректну дату в майбутньому',
+      });
+      return;
+    }
+
+    startButton.disabled = true; 
+    dateTimePicker.disabled = true;
+    startTimer(); 
+  });
+
 });
