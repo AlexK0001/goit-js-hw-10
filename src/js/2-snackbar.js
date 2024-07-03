@@ -1,3 +1,8 @@
+import flatpickr from "flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
+import iziToast from "izitoast";
+import "izitoast/dist/css/iziToast.min.css";
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('.form');
     
