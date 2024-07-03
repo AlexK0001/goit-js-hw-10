@@ -4,7 +4,7 @@ import iziToast from "izitoast";
 import "izitoast/dist/css/iziToast.min.css";
 
 document.addEventListener('DOMContentLoaded', function () {
-  let countdownInterval;
+  // let countdownInterval;
   const dateTimePicker = document.querySelector('#datetime-picker');
   const startButton = document.querySelector('[data-start]');
   const daysValue = document.querySelector('[data-days]'); 
